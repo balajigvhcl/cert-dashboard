@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Certification Study Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: rgba(255,255,255,0.07);
+    --accent-blue: #3b82f6;
+    --accent-teal: #14b8a6;
+    --accent-amber: #f59e0b;
+    --accent-purple: #a78bfa;
+    --accent-green: #22c55e;
+    --text: #f0f4ff;
+    --muted: #64748b;
+    --mono: 'Space Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  /* HEADER */
+  .hdr {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px; margin-bottom: 24px;
+    border-bottom: 1px solid var(--border); padding-bottom: 18px;
+  }
+  .hdr-title { font-family: var(--mono); font-size: 11px; color: var(--accent-teal); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
+  .hdr-name { font-size: 22px; font-weight: 600; color: var(--text); }
+  .hdr-date { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .target-badge { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; font-family: var(--mono); font-size: 10px; padding: 6px 12px; border-radius: 4px; text-align: center; }
+  .target-badge .days { font-size: 24px; font-weight: 700; display: block; color: #f87171; }
+
+  /* STATS ROW */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 24px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+  .stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .stat-val { font-family: var(--mono); font-size: 22px; font-weight: 700; }
+  .stat-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .c-blue { color: var(--accent-blue); }
+  .c-teal { color: var(--accent-teal); }
+  .c-amber { color: var(--accent-amber); }
+  .c-purple { color: var(--accent-purple); }
+  .c-green { color: var(--accent-green); }
+
+  /* PROGRESS BARS */
+  .prog-section { margin-bottom: 24px; }
+  .prog-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 8px; }
+  .prog-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .prog-name { font-weight: 500; font-size: 13px; }
+  .prog-pct { font-family: var(--mono); font-size: 12px; }
+  .prog-bar-bg { background: rgba(255,255,255,0.06); border-radius: 3px; height: 6px; }
+  .prog-bar { height: 6px; border-radius: 3px; transition: width 0.5s ease; }
+  .prog-meta { display: flex; gap: 12px; margin-top: 8px; }
+  .prog-tag { font-size: 10px; color: var(--muted); }
+  .prog-tag span { color: var(--text); }
+
+  /* PHASE TABS */
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+  .tab-btn { padding: 7px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--muted); font-size: 12px; cursor: pointer; font-family: var(--sans); transition: all 0.2s; }
+  .tab-btn.active { border-color: var(--accent-teal); color: var(--accent-teal); background: rgba(20,184,166,0.08); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* WEEK/DAY TASKS */
+  .week-group { margin-bottom: 16px; }
+  .week-label { font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; padding-left: 4px; border-left: 2px solid var(--border); }
+  .week-label.w-blue { border-color: var(--accent-blue); color: var(--accent-blue); }
+  .week-label.w-teal { border-color: var(--accent-teal); color: var(--accent-teal); }
+  .week-label.w-amber { border-color: var(--accent-amber); color: var(--accent-amber); }
+  .week-label.w-purple { border-color: var(--accent-purple); color: var(--accent-purple); }
+
+  .task-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px; margin-bottom: 6px;
+    cursor: pointer; transition: all 0.2s; user-select: none;
+  }
+  .task-item:hover { border-color: rgba(255,255,255,0.15); }
+  .task-item.done { opacity: 0.5; }
+  .task-item.done .task-text { text-decoration: line-through; }
+  .task-item.done .chk { background: var(--accent-green); border-color: var(--accent-green); }
+  .task-item.done .chk::after { opacity: 1; }
+
+  .chk {
+    width: 18px; height: 18px; min-width: 18px;
+    border: 1.5px solid var(--border); border-radius: 4px;
+    position: relative; transition: all 0.2s; margin-top: 1px;
+  }
+  .chk::after {
+    content: ''; position: absolute;
+    left: 4px; top: 1px; width: 6px; height: 10px;
+    border: 2px solid white; border-top: none; border-left: none;
+    transform: rotate(45deg); opacity: 0; transition: opacity 0.2s;
+  }
+
+  .task-text { flex: 1; line-height: 1.5; color: var(--text); font-size: 13px; }
+  .task-date { font-family: var(--mono); font-size: 10px; color: var(--muted); white-space: nowrap; margin-top: 2px; }
+  .task-right { text-align: right; }
+
+  /* TODAY HIGHLIGHT */
+  .task-item.today { border-color: rgba(59,130,246,0.4); background: rgba(59,130,246,0.05); }
+  .today-pill { font-size: 9px; background: var(--accent-blue); color: white; padding: 2px 6px; border-radius: 3px; font-family: var(--mono); }
+
+  /* LOG SECTION */
+  .log-section { margin-bottom: 24px; }
+  .log-input-row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .log-input { flex: 1; min-width: 200px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: var(--sans); font-size: 13px; outline: none; transition: border-color 0.2s; }
+  .log-input:focus { border-color: var(--accent-teal); }
+  .log-select { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: var(--sans); font-size: 13px; outline: none; cursor: pointer; }
+  .log-btn { background: var(--accent-teal); color: var(--bg); border: none; border-radius: 8px; padding: 10px 18px; font-family: var(--mono); font-size: 12px; cursor: pointer; font-weight: 700; transition: opacity 0.2s; }
+  .log-btn:hover { opacity: 0.85; }
+
+  .log-entry { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-bottom: 6px; display: flex; gap: 12px; align-items: flex-start; }
+  .log-dot { width: 8px; height: 8px; min-width: 8px; border-radius: 50%; margin-top: 5px; }
+  .log-meta { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-bottom: 3px; }
+  .log-text { font-size: 13px; color: var(--text); line-height: 1.5; }
+  .log-del { font-size: 16px; color: var(--muted); cursor: pointer; margin-left: auto; padding: 0 4px; line-height: 1; }
+  .log-del:hover { color: #f87171; }
+  .no-logs { color: var(--muted); font-size: 13px; text-align: center; padding: 20px; }
+
+  /* RESOURCES */
+  .res-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px; margin-bottom: 24px; }
+  .res-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; text-decoration: none; transition: border-color 0.2s; display: block; }
+  .res-card:hover { border-color: rgba(255,255,255,0.2); }
+  .res-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .res-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+  .res-title { font-weight: 500; font-size: 13px; color: var(--text); }
+  .res-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+  .res-tag { font-size: 10px; margin-top: 6px; padding: 2px 7px; border-radius: 3px; display: inline-block; font-family: var(--mono); }
+
+  /* SECTION TITLES */
+  .sec-title { font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .sec-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* FOOTER */
+  .footer { text-align: center; font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); }
+
+  .clear-btn { background: none; border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; border-radius: 6px; padding: 5px 12px; font-size: 11px; cursor: pointer; font-family: var(--mono); }
+  .clear-btn:hover { background: rgba(239,68,68,0.1); }
+  .export-btn { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 6px; padding: 5px 12px; font-size: 11px; cursor: pointer; font-family: var(--mono); }
+  .export-btn:hover { border-color: var(--accent-teal); color: var(--accent-teal); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div>
+    <div class="hdr-title">// certification tracker</div>
+    <div class="hdr-name">Azure DevOps &amp; Cloud Engineering</div>
+    <div class="hdr-date" id="todayDate"></div>
+  </div>
+  <div class="target-badge">
+    <span class="days" id="daysLeft">–</span>
+    days to AZ-400<br>
+    <small>🎯 Jul 21, 2026</small>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat"><div class="stat-label">Tasks Done</div><div class="stat-val c-green" id="statDone">0</div><div class="stat-sub">of <span id="statTotal">0</span> total</div></div>
+  <div class="stat"><div class="stat-label">Overall</div><div class="stat-val c-teal" id="statPct">0%</div><div class="stat-sub">completion</div></div>
+  <div class="stat"><div class="stat-label">AZ-104</div><div class="stat-val c-blue" id="statAz104">0%</div><div class="stat-sub">phase 1</div></div>
+  <div class="stat"><div class="stat-label">AZ-400</div><div class="stat-val c-teal" id="statAz400">0%</div><div class="stat-sub">phase 2</div></div>
+  <div class="stat"><div class="stat-label">Log Entries</div><div class="stat-val c-purple" id="statLogs">0</div><div class="stat-sub">notes added</div></div>
+</div>
+
+<!-- PHASE PROGRESS BARS -->
+<div class="sec-title">Phase progress</div>
+<div class="prog-section">
+  <div class="prog-card">
+    <div class="prog-head">
+      <span class="prog-name">📘 Phase 1 — AZ-104: Azure Administrator</span>
+      <span class="prog-pct c-blue" id="pct104">0%</span>
+    </div>
+    <div class="prog-bar-bg"><div class="prog-bar" id="bar104" style="width:0%;background:var(--accent-blue)"></div></div>
+    <div class="prog-meta">
+      <span class="prog-tag">Jun 1–21 &nbsp;·&nbsp; <span id="done104">0</span> tasks done</span>
+      <span class="prog-tag">Prerequisite for Expert badge</span>
+    </div>
+  </div>
+  <div class="prog-card">
+    <div class="prog-head">
+      <span class="prog-name">🚀 Phase 2 — AZ-400: DevOps Engineer Expert</span>
+      <span class="prog-pct c-teal" id="pct400">0%</span>
+    </div>
+    <div class="prog-bar-bg"><div class="prog-bar" id="bar400" style="width:0%;background:var(--accent-teal)"></div></div>
+    <div class="prog-meta">
+      <span class="prog-tag">Jun 22–Jul 21 &nbsp;·&nbsp; <span id="done400">0</span> tasks done</span>
+      <span class="prog-tag">Pipelines = 50–55% of exam</span>
+    </div>
+  </div>
+  <div class="prog-card">
+    <div class="prog-head">
+      <span class="prog-name">🔧 Terraform Associate (004) — After Jul 21</span>
+      <span class="prog-pct c-amber" id="pctTf">0%</span>
+    </div>
+    <div class="prog-bar-bg"><div class="prog-bar" id="barTf" style="width:0%;background:var(--accent-amber)"></div></div>
+    <div class="prog-meta">
+      <span class="prog-tag">Retake focus: state management, modules, HCP Terraform</span>
+    </div>
+  </div>
+  <div class="prog-card">
+    <div class="prog-head">
+      <span class="prog-name">🤖 Ansible RHCE (EX294) — After Terraform</span>
+      <span class="prog-pct c-purple" id="pctAns">0%</span>
+    </div>
+    <div class="prog-bar-bg"><div class="prog-bar" id="barAns" style="width:0%;background:var(--accent-purple)"></div></div>
+    <div class="prog-meta">
+      <span class="prog-tag">Performance-based lab exam · Hands-on practice is key</span>
+    </div>
+  </div>
+</div>
+
+<!-- DAILY TASKS -->
+<div class="sec-title">Daily study tasks</div>
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('az104t')">📘 AZ-104</button>
+  <button class="tab-btn" onclick="switchTab('az400t')">🚀 AZ-400</button>
+  <button class="tab-btn" onclick="switchTab('tft')">🔧 Terraform</button>
+  <button class="tab-btn" onclick="switchTab('anst')">🤖 Ansible</button>
+</div>
+
+<div id="az104t" class="tab-content active"></div>
+<div id="az400t" class="tab-content"></div>
+<div id="tft" class="tab-content"></div>
+<div id="anst" class="tab-content"></div>
+
+<!-- DAILY LOG -->
+<div class="log-section">
+  <div class="sec-title">Daily learning log</div>
+  <div class="log-input-row">
+    <input class="log-input" id="logText" placeholder="What did you study today? Key takeaways, struggles, wins..." />
+    <select class="log-select" id="logTag">
+      <option value="az104">AZ-104</option>
+      <option value="az400">AZ-400</option>
+      <option value="terraform">Terraform</option>
+      <option value="ansible">Ansible</option>
+      <option value="general">General</option>
+    </select>
+    <button class="log-btn" onclick="addLog()">+ Log it</button>
+  </div>
+  <div id="logList"></div>
+</div>
+
+<!-- RESOURCES -->
+<div class="sec-title">Quick-access resources</div>
+<div class="res-grid">
+  <a class="res-card" href="https://learn.microsoft.com/en-us/training/paths/az-104-administrator-prerequisites/" target="_blank">
+    <div class="res-head"><div class="res-icon" style="background:rgba(59,130,246,0.15)">📚</div><div class="res-title">Microsoft Learn — AZ-104</div></div>
+    <div class="res-desc">Official AZ-104 learning path, free modules and sandbox labs</div>
+    <span class="res-tag" style="background:rgba(59,130,246,0.12);color:#93c5fd">Free · Official</span>
+  </a>
+  <a class="res-card" href="https://learn.microsoft.com/en-us/credentials/certifications/exams/az-400/" target="_blank">
+    <div class="res-head"><div class="res-icon" style="background:rgba(20,184,166,0.15)">🎯</div><div class="res-title">AZ-400 Official Exam Page</div></div>
+    <div class="res-desc">Study guide, exam domains, schedule exam (updated Apr 2026)</div>
+    <span class="res-tag" style="background:rgba(20,184,166,0.12);color:#5eead4">Free · Official</span>
+  </a>
+  <a class="res-card" href="https://www.youtube.com/c/JohnSavill1" target="_blank">
+    <div class="res-head"><div class="res-icon" style="background:rgba(239,68,68,0.15)">▶️</div><div class="res-title">John Savill's YouTube</div></div>
+    <div class="res-desc">Best free AZ-104 &amp; AZ-400 cram videos and deep dives</div>
+    <span class="res-tag" style="background:rgba(239,68,68,0.12);color:#fca5a5">Free · Highly rated</span>
+  </a>
+  <a class="res-card" href="https://www.examcert.app/exams/azure-az-104/" target="_blank">
+    <div class="res-head"><div class="res-icon" style="background:rgba(59,130,246,0.15)">✅</div><div class="res-title">ExamCert — AZ-104 Practice</div></div>
+    <div class="res-desc">600+ free practice questions with explanations</div>
+    <span class="res-tag" style="background:rgba(59,130,246,0.12);color:#93c5fd">Free · Mock tests</span>
+  </a>
+  <a class="res-card" href="https://developer.hashicorp.com/terraform/tutorials/certification-004/associate-study-004" target="_blank">
+    <div class="res-head"><div class="res-icon" style="background:rgba(245,158,11,0.15)">🏗️</div><div class="res-title">HashiCorp Terraform Study Guide</div></div>
+    <div class="res-desc">Official 004 study guide, ordered by complexity</div>
+    <span class="res-tag" style="background:rgba(245,158,11,0.12);color:#fcd34d">Free · Official</span>
+  </a>
+  <a class="res-card" href="https://developers.redhat.com/e-books/ansible-study-guide" target="_blank">
+    <div class="res-head"><div class="res-icon" style="background:rgba(167,139,250,0.15)">📖</div><div class="res-title">Red Hat Ansible Study Guide</div></div>
+    <div class="res-desc">Free O'Reilly book for RHCE Ansible exam prep</div>
+    <span class="res-tag" style="background:rgba(167,139,250,0.12);color:#c4b5fd">Free · Official</span>
+  </a>
+  <a class="res-card" href="https://portal.azure.com" target="_blank">
+    <div class="res-head"><div class="res-icon" style="background:rgba(20,184,166,0.15)">☁️</div><div class="res-title">Azure Portal (Labs)</div></div>
+    <div class="res-desc">Hands-on practice — free account with $200 credit</div>
+    <span class="res-tag" style="background:rgba(20,184,166,0.12);color:#5eead4">Free · Hands-on</span>
+  </a>
+  <a class="res-card" href="https://certificationpractice.com/practice-exams/hashicorp-certified-terraform-associate" target="_blank">
+    <div class="res-head"><div class="res-icon" style="background:rgba(245,158,11,0.15)">📝</div><div class="res-title">Terraform Practice Exams</div></div>
+    <div class="res-desc">360 free Terraform Associate (004) practice questions</div>
+    <span class="res-tag" style="background:rgba(245,158,11,0.12);color:#fcd34d">Free · Mock tests</span>
+  </a>
+</div>
+
+<div style="display:flex;gap:8px;margin-bottom:24px">
+  <button class="export-btn" onclick="exportData()">⬇ Export progress (JSON)</button>
+  <button class="clear-btn" onclick="clearAll()">✕ Reset all progress</button>
+</div>
+
+<div class="footer">
+  technologyfortruth.wordpress.com &nbsp;·&nbsp; last updated: <span id="lastUpdated">never</span>
+</div>
+
+<script>
+// ─── DATA ─────────────────────────────────────────────────────
+const TASKS = {
+  az104: [
+    { id:'a1', week:'Week 1 · Jun 1–7 · Identity & Governance', wc:'w-blue',
+      items:[
+        {id:'a1a', date:'Mon Jun 2', text:'Create Azure free account. Start Microsoft Learn: Manage Azure identities — Entra ID, users, groups'},
+        {id:'a1b', date:'Tue Jun 3', text:'RBAC, subscriptions, management groups. Watch John Savill AZ-104 identity cram video'},
+        {id:'a1c', date:'Wed Jun 4', text:'Azure Policy, Blueprints, resource locks. Hands-on: create policies in portal'},
+        {id:'a1d', date:'Thu Jun 5', text:'Storage accounts — blob, file, queue, table. SAS tokens, access tiers'},
+        {id:'a1e', date:'Fri Jun 6', text:'Storage replication (LRS/ZRS/GRS), lifecycle management. Hands-on labs'},
+        {id:'a1f', date:'Sat Jun 7', text:'Review Week 1. Take 30-question AZ-104 practice quiz (ExamCert) — note weak areas'},
+      ]},
+    { id:'a2', week:'Week 2 · Jun 8–14 · Compute Resources', wc:'w-blue',
+      items:[
+        {id:'a2a', date:'Mon Jun 9', text:'Virtual machines — deployment, availability sets, scale sets'},
+        {id:'a2b', date:'Tue Jun 10', text:'VM disks, snapshots, backup. Azure Backup vault setup'},
+        {id:'a2c', date:'Wed Jun 11', text:'Azure App Service — plans, deployment slots, scaling'},
+        {id:'a2d', date:'Thu Jun 12', text:'Azure Container Instances and intro to AKS. Hands-on: deploy a container'},
+        {id:'a2e', date:'Fri Jun 13', text:'Azure Functions basics. Review compute topics end-to-end'},
+        {id:'a2f', date:'Sat Jun 14', text:'Full practice test (60 Qs, timed). Review all wrong answers in detail'},
+      ]},
+    { id:'a3', week:'Week 3 · Jun 15–21 · Networking, Monitoring & Exam', wc:'w-blue',
+      items:[
+        {id:'a3a', date:'Mon Jun 16', text:'VNets, subnets, NSGs (rule evaluation order is critical!), ASGs'},
+        {id:'a3b', date:'Tue Jun 17', text:'VPN Gateway, ExpressRoute basics, VNet peering, DNS'},
+        {id:'a3c', date:'Wed Jun 18', text:'Load Balancer (L4) vs Application Gateway (L7). Traffic Manager, Front Door'},
+        {id:'a3d', date:'Thu Jun 19', text:'Azure Monitor, Log Analytics, Application Insights. Alerts and action groups'},
+        {id:'a3e', date:'Fri Jun 20', text:'Full timed mock exam — aim for 80%+ before booking real exam'},
+        {id:'a3f', date:'Sat Jun 21', text:'🎯 Book and sit AZ-104 exam!'},
+      ]},
+  ],
+  az400: [
+    { id:'b1', week:'Week 4 · Jun 22–28 · Source Control & Azure DevOps Setup', wc:'w-teal',
+      items:[
+        {id:'b1a', date:'Mon Jun 23', text:'Set up Azure DevOps org + GitHub account. Explore Azure Repos, Boards, Pipelines'},
+        {id:'b1b', date:'Tue Jun 24', text:'Git advanced — rebase vs merge, branch protection, PR policies, Git LFS'},
+        {id:'b1c', date:'Wed Jun 25', text:'Azure Boards — work items, backlogs, sprints, Kanban. Link commits to items'},
+        {id:'b1d', date:'Thu Jun 26', text:'GitHub Issues, GitHub Projects. Integrate GitHub with Azure DevOps'},
+        {id:'b1e', date:'Fri Jun 27', text:'Branching strategies: GitFlow vs trunk-based. Hands-on: set up branch policies'},
+        {id:'b1f', date:'Sat Jun 28', text:'Review. Take AZ-400 diagnostic quiz. Identify CI/CD knowledge gaps'},
+      ]},
+    { id:'b2', week:'Week 5 · Jun 29–Jul 5 · CI/CD Pipelines (Most Important!)', wc:'w-teal',
+      items:[
+        {id:'b2a', date:'Mon Jun 30', text:'Azure Pipelines YAML — structure: stages, jobs, steps, dependencies, conditions'},
+        {id:'b2b', date:'Tue Jul 1', text:'Pipeline templates, variables (runtime/compile-time), variable groups, library'},
+        {id:'b2c', date:'Wed Jul 2', text:'GitHub Actions — workflows, jobs, reusable workflows, composite actions'},
+        {id:'b2d', date:'Thu Jul 3', text:'Deployment environments, approvals, gates, deployment strategies (blue-green, canary, rolling)'},
+        {id:'b2e', date:'Fri Jul 4', text:'Artifact feeds (Azure Artifacts), publishing/consuming packages. Self-hosted agents'},
+        {id:'b2f', date:'Sat Jul 5', text:'Build a full CI/CD pipeline from scratch end-to-end. Review and refine'},
+      ]},
+    { id:'b3', week:'Week 6 · Jul 6–12 · Security, IaC & Monitoring', wc:'w-teal',
+      items:[
+        {id:'b3a', date:'Mon Jul 7', text:'Azure Key Vault integration in pipelines. Managed identities vs service principals'},
+        {id:'b3b', date:'Tue Jul 8', text:'Secrets scanning, dependency scanning (Dependabot, Defender for DevOps)'},
+        {id:'b3c', date:'Wed Jul 9', text:'Infrastructure as Code in pipelines — Bicep/ARM deployments, Terraform in pipelines'},
+        {id:'b3d', date:'Thu Jul 10', text:'Configuration management — Azure App Configuration. Feature flags'},
+        {id:'b3e', date:'Fri Jul 11', text:'Application Insights in CI/CD. Release gates using monitoring data. SLI/SLO'},
+        {id:'b3f', date:'Sat Jul 12', text:'Full AZ-400 practice test (timed). Target 75%+'},
+      ]},
+    { id:'b4', week:'Week 7 · Jul 13–21 · Final Review & Exam', wc:'w-teal',
+      items:[
+        {id:'b4a', date:'Mon Jul 14', text:'Review all pipeline topics — go through missed questions from practice tests'},
+        {id:'b4b', date:'Tue Jul 15', text:'Review security & compliance domain. Redo weak-area questions'},
+        {id:'b4c', date:'Wed Jul 16', text:'Full mock exam (different question set). Aim for 80%+'},
+        {id:'b4d', date:'Thu Jul 17', text:'Light review only — watch John Savill AZ-400 cram video. No new topics'},
+        {id:'b4e', date:'Fri Jul 18', text:'Rest day. Quick flashcard review only. Get good sleep'},
+        {id:'b4f', date:'Mon Jul 21', text:'🎯 AZ-400 EXAM DAY! You\'ve got this!'},
+      ]},
+  ],
+  terraform: [
+    { id:'t1', week:'Post AZ-400 · Weeks 1–3 · Foundations', wc:'w-amber',
+      items:[
+        {id:'t1a', date:'Week 1', text:'Review HashiCorp official study guide (004). Redo IaC concepts and core workflow (init/plan/apply/destroy)'},
+        {id:'t1b', date:'Week 1', text:'Rebuild: write Terraform configs from scratch — providers, resources, data sources, variables, outputs'},
+        {id:'t1c', date:'Week 2', text:'Deep dive: Terraform state management — remote backends, state locking, terraform import, state mv/rm'},
+        {id:'t1d', date:'Week 2', text:'Deep dive: Modules — sourcing, versioning, variable scope, outputs, composition patterns'},
+        {id:'t1e', date:'Week 3', text:'HCP Terraform (Terraform Cloud) — workspaces, variable sets, remote runs, policy enforcement, drift detection'},
+        {id:'t1f', date:'Week 3', text:'Take full Terraform Associate practice exam. Score 85%+ before booking'},
+      ]},
+    { id:'t2', week:'Post AZ-400 · Weeks 4–6 · Practice & Exam', wc:'w-amber',
+      items:[
+        {id:'t2a', date:'Week 4', text:'Project: Multi-environment infra with modules, remote backend, workspaces in Azure'},
+        {id:'t2b', date:'Week 5', text:'Practice test daily (CertificationPractice.com — 360 free questions). Review every wrong answer'},
+        {id:'t2c', date:'Week 6', text:'Mock exam (timed, 57 Qs in 60 min). Aim 80%+ consistently then book the exam'},
+      ]},
+  ],
+  ansible: [
+    { id:'n1', week:'Post Terraform · Phase 1 · Fundamentals', wc:'w-purple',
+      items:[
+        {id:'n1a', date:'Month 1 W1', text:'Read Red Hat free Ansible Study Guide (O\'Reilly). Install Ansible, set up lab VMs'},
+        {id:'n1b', date:'Month 1 W1', text:'Write playbooks: install packages, manage users/groups, set up cron jobs'},
+        {id:'n1c', date:'Month 1 W2', text:'Inventory management — static/dynamic inventory, groups, host_vars, group_vars'},
+        {id:'n1d', date:'Month 1 W2', text:'Handlers, conditionals (when), loops, tags — write 10+ different playbooks'},
+        {id:'n1e', date:'Month 1 W3', text:'Roles — create roles from scratch, Ansible Galaxy, role dependencies'},
+        {id:'n1f', date:'Month 1 W4', text:'Jinja2 templates, register, magic variables, Ansible facts'},
+      ]},
+    { id:'n2', week:'Post Terraform · Phase 2 · Exam Prep', wc:'w-purple',
+      items:[
+        {id:'n2a', date:'Month 2 W1', text:'Ansible Vault — encrypt/decrypt files, vault IDs, using vault in playbooks'},
+        {id:'n2b', date:'Month 2 W2', text:'Timed lab simulation: complete 10 tasks in 3 hours (mirrors EX294 format)'},
+        {id:'n2c', date:'Month 2 W3', text:'Full mock lab: configure users, deploy Nginx, set up cron, configure firewall — all with Ansible'},
+        {id:'n2d', date:'Month 2 W4', text:'🎯 Book and sit RHCE EX294 exam when consistently finishing timed labs'},
+      ]},
+  ],
+};
+
+// ─── STORAGE ─────────────────────────────────────────────────
+function load(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch(e) { return null; } }
+function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} }
+
+let done = load('cert_done') || {};
+let logs = load('cert_logs') || [];
+
+// ─── RENDER TASKS ─────────────────────────────────────────────
+const TODAY_STR = new Date().toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
+
+function renderTasks(tabId, groups) {
+  const el = document.getElementById(tabId);
+  el.innerHTML = '';
+  groups.forEach(g => {
+    const wg = document.createElement('div');
+    wg.className = 'week-group';
+    wg.innerHTML = `<div class="week-label ${g.wc}">${g.week}</div>`;
+    g.items.forEach(item => {
+      const isDone = !!done[item.id];
+      const isToday = item.date && TODAY_STR.includes(item.date.replace(/Mon|Tue|Wed|Thu|Fri|Sat|Sun/,'').trim().slice(0,6));
+      const div = document.createElement('div');
+      div.className = 'task-item' + (isDone ? ' done' : '') + (isToday ? ' today' : '');
+      div.innerHTML = `
+        <div class="chk"></div>
+        <div style="flex:1">
+          ${isToday ? '<span class="today-pill">TODAY</span> ' : ''}
+          <span class="task-text">${item.text}</span>
+        </div>
+        <div class="task-right"><div class="task-date">${item.date}</div></div>`;
+      div.onclick = () => toggleTask(item.id, tabId, groups);
+      wg.appendChild(div);
+    });
+    el.appendChild(wg);
+  });
+}
+
+function toggleTask(id, tabId, groups) {
+  done[id] = !done[id];
+  if (!done[id]) delete done[id];
+  save('cert_done', done);
+  save('cert_lastUpdate', new Date().toISOString());
+  renderTasks(tabId, groups);
+  updateStats();
+  updateLastUpdated();
+}
+
+// ─── TABS ─────────────────────────────────────────────────────
+function switchTab(id) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ─── STATS ────────────────────────────────────────────────────
+function countTasks(groups) {
+  let total = 0, doneCount = 0;
+  groups.forEach(g => g.items.forEach(i => { total++; if (done[i.id]) doneCount++; }));
+  return { total, doneCount };
+}
+
+function updateStats() {
+  const all = [...TASKS.az104, ...TASKS.az400, ...TASKS.terraform, ...TASKS.ansible];
+  const { total, doneCount } = countTasks(all);
+  const pct = total ? Math.round(doneCount/total*100) : 0;
+
+  const a104 = countTasks(TASKS.az104);
+  const a400 = countTasks(TASKS.az400);
+  const tf = countTasks(TASKS.terraform);
+  const ans = countTasks(TASKS.ansible);
+
+  const p104 = a104.total ? Math.round(a104.doneCount/a104.total*100) : 0;
+  const p400 = a400.total ? Math.round(a400.doneCount/a400.total*100) : 0;
+  const ptf = tf.total ? Math.round(tf.doneCount/tf.total*100) : 0;
+  const pans = ans.total ? Math.round(ans.doneCount/ans.total*100) : 0;
+
+  document.getElementById('statDone').textContent = doneCount;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statPct').textContent = pct + '%';
+  document.getElementById('statAz104').textContent = p104 + '%';
+  document.getElementById('statAz400').textContent = p400 + '%';
+  document.getElementById('statLogs').textContent = logs.length;
+
+  document.getElementById('pct104').textContent = p104 + '%';
+  document.getElementById('bar104').style.width = p104 + '%';
+  document.getElementById('done104').textContent = a104.doneCount;
+
+  document.getElementById('pct400').textContent = p400 + '%';
+  document.getElementById('bar400').style.width = p400 + '%';
+  document.getElementById('done400').textContent = a400.doneCount;
+
+  document.getElementById('pctTf').textContent = ptf + '%';
+  document.getElementById('barTf').style.width = ptf + '%';
+
+  document.getElementById('pctAns').textContent = pans + '%';
+  document.getElementById('barAns').style.width = pans + '%';
+}
+
+// ─── LOG ──────────────────────────────────────────────────────
+const tagColors = {
+  az104: {bg:'rgba(59,130,246,0.2)', dot:'#3b82f6', label:'AZ-104'},
+  az400: {bg:'rgba(20,184,166,0.2)', dot:'#14b8a6', label:'AZ-400'},
+  terraform: {bg:'rgba(245,158,11,0.2)', dot:'#f59e0b', label:'Terraform'},
+  ansible: {bg:'rgba(167,139,250,0.2)', dot:'#a78bfa', label:'Ansible'},
+  general: {bg:'rgba(100,116,139,0.2)', dot:'#64748b', label:'General'},
+};
+
+function addLog() {
+  const text = document.getElementById('logText').value.trim();
+  if (!text) return;
+  const tag = document.getElementById('logTag').value;
+  const entry = { id: Date.now(), text, tag, date: new Date().toLocaleString() };
+  logs.unshift(entry);
+  save('cert_logs', logs);
+  save('cert_lastUpdate', new Date().toISOString());
+  document.getElementById('logText').value = '';
+  renderLogs();
+  updateStats();
+  updateLastUpdated();
+}
+
+function deleteLog(id) {
+  logs = logs.filter(l => l.id !== id);
+  save('cert_logs', logs);
+  renderLogs();
+  updateStats();
+}
+
+function renderLogs() {
+  const el = document.getElementById('logList');
+  if (!logs.length) {
+    el.innerHTML = '<div class="no-logs">No log entries yet. Add your first note above!</div>';
+    return;
+  }
+  el.innerHTML = '';
+  logs.forEach(l => {
+    const tc = tagColors[l.tag] || tagColors.general;
+    const div = document.createElement('div');
+    div.className = 'log-entry';
+    div.innerHTML = `
+      <div class="log-dot" style="background:${tc.dot}"></div>
+      <div style="flex:1">
+        <div class="log-meta">${l.date} &nbsp;·&nbsp; <span style="color:${tc.dot}">${tc.label}</span></div>
+        <div class="log-text">${l.text}</div>
+      </div>
+      <span class="log-del" onclick="deleteLog(${l.id})">×</span>`;
+    el.appendChild(div);
+  });
+}
+
+// ─── UTILS ────────────────────────────────────────────────────
+function updateLastUpdated() {
+  const lu = load('cert_lastUpdate');
+  document.getElementById('lastUpdated').textContent = lu ? new Date(lu).toLocaleString() : 'never';
+}
+
+function daysUntil(dateStr) {
+  const target = new Date(dateStr);
+  const now = new Date();
+  now.setHours(0,0,0,0);
+  target.setHours(0,0,0,0);
+  return Math.max(0, Math.round((target - now) / 86400000));
+}
+
+function clearAll() {
+  if (!confirm('Reset ALL progress and logs? This cannot be undone.')) return;
+  localStorage.removeItem('cert_done');
+  localStorage.removeItem('cert_logs');
+  localStorage.removeItem('cert_lastUpdate');
+  done = {}; logs = [];
+  renderAll();
+}
+
+function exportData() {
+  const data = { done, logs, exportedAt: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'cert-progress-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+}
+
+function renderAll() {
+  renderTasks('az104t', TASKS.az104);
+  renderTasks('az400t', TASKS.az400);
+  renderTasks('tft', TASKS.terraform);
+  renderTasks('anst', TASKS.ansible);
+  renderLogs();
+  updateStats();
+  updateLastUpdated();
+}
+
+// ─── INIT ─────────────────────────────────────────────────────
+document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+document.getElementById('daysLeft').textContent = daysUntil('2026-07-21');
+renderAll();
+
+// Enter key for log
+document.getElementById('logText').addEventListener('keydown', e => { if (e.key === 'Enter') addLog(); });
+</script>
+</body>
+</html>
